@@ -1,0 +1,9 @@
+reportlab==4.4.9
+pillow==12.3.0
+charset-normalizer==3.5.2
+pypdf==6.10.0
+beautifulsoup4==4.14.3
+googlenewsdecoder==0.2.1
+# Decoder 0.2.1 imports the Modest parser removed by selectolax 1.0.
+selectolax==0.4.12
+openpyxl==3.1.5

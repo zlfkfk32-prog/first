@@ -1,0 +1,31 @@
+name: Daily public-source PDF cardletter
+on:
+  schedule:
+    # 23:00 UTC = next day 08:00 Asia/Seoul, every day.
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: daily-cardletter
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: bash scripts/install.sh
+      - run: .venv/bin/python -m unittest discover -s tests -v
+      - run: .venv/bin/python -m cardletter
+      - name: Upload PDF and source status (including failure report)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-cardletter-${{ github.run_id }}
+          path: output/
+          if-no-files-found: warn
+          retention-days: 7

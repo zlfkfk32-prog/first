@@ -1,0 +1,554 @@
+{
+  "verified": true,
+  "category": "토목건축공사업",
+  "year": 2026,
+  "source_url": "https://www.cak.or.kr/lay1/bbs/S1T10C14/A/4/view.do?article_seq=159605",
+  "source_file": "rankings-2026-91ecb0f164b8.xlsx",
+  "source_sha256": "91ecb0f164b861725fa338af4e11933ead2df6935fb833ac4e30805e52ca676b",
+  "contractors": [
+    {
+      "rank": 1,
+      "name": "삼성물산",
+      "aliases": []
+    },
+    {
+      "rank": 2,
+      "name": "현대건설",
+      "aliases": []
+    },
+    {
+      "rank": 3,
+      "name": "지에스건설",
+      "aliases": [
+        "GS건설"
+      ]
+    },
+    {
+      "rank": 4,
+      "name": "현대엔지니어링",
+      "aliases": []
+    },
+    {
+      "rank": 5,
+      "name": "대우건설",
+      "aliases": []
+    },
+    {
+      "rank": 6,
+      "name": "디엘이앤씨",
+      "aliases": [
+        "DL이앤씨"
+      ]
+    },
+    {
+      "rank": 7,
+      "name": "롯데건설",
+      "aliases": []
+    },
+    {
+      "rank": 8,
+      "name": "포스코이앤씨",
+      "aliases": []
+    },
+    {
+      "rank": 9,
+      "name": "에스케이에코플랜트",
+      "aliases": [
+        "SK에코플랜트"
+      ]
+    },
+    {
+      "rank": 10,
+      "name": "아이파크현대산업개발",
+      "aliases": [
+        "HDC현대산업개발",
+        "현대산업개발"
+      ]
+    },
+    {
+      "rank": 11,
+      "name": "한화",
+      "aliases": [
+        "한화 건설부문"
+      ]
+    },
+    {
+      "rank": 12,
+      "name": "호반건설",
+      "aliases": []
+    },
+    {
+      "rank": 13,
+      "name": "디엘건설",
+      "aliases": [
+        "DL건설"
+      ]
+    },
+    {
+      "rank": 14,
+      "name": "계룡건설산업",
+      "aliases": [
+        "계룡건설"
+      ]
+    },
+    {
+      "rank": 15,
+      "name": "두산에너빌리티",
+      "aliases": []
+    },
+    {
+      "rank": 16,
+      "name": "서희건설",
+      "aliases": []
+    },
+    {
+      "rank": 17,
+      "name": "제일건설",
+      "aliases": []
+    },
+    {
+      "rank": 18,
+      "name": "우미건설",
+      "aliases": []
+    },
+    {
+      "rank": 19,
+      "name": "쌍용건설",
+      "aliases": []
+    },
+    {
+      "rank": 20,
+      "name": "효성중공업",
+      "aliases": []
+    },
+    {
+      "rank": 21,
+      "name": "케이씨씨건설",
+      "aliases": [
+        "KCC건설"
+      ]
+    },
+    {
+      "rank": 22,
+      "name": "대방건설",
+      "aliases": []
+    },
+    {
+      "rank": 23,
+      "name": "코오롱글로벌",
+      "aliases": []
+    },
+    {
+      "rank": 24,
+      "name": "태영건설",
+      "aliases": []
+    },
+    {
+      "rank": 25,
+      "name": "동부건설",
+      "aliases": []
+    },
+    {
+      "rank": 26,
+      "name": "두산건설",
+      "aliases": []
+    },
+    {
+      "rank": 27,
+      "name": "금호건설",
+      "aliases": []
+    },
+    {
+      "rank": 28,
+      "name": "에이치엘디앤아이한라",
+      "aliases": [
+        "HL디앤아이한라"
+      ]
+    },
+    {
+      "rank": 29,
+      "name": "한신공영",
+      "aliases": []
+    },
+    {
+      "rank": 30,
+      "name": "호반산업",
+      "aliases": []
+    },
+    {
+      "rank": 31,
+      "name": "에이치제이중공업",
+      "aliases": [
+        "HJ중공업"
+      ]
+    },
+    {
+      "rank": 32,
+      "name": "비에스한양",
+      "aliases": [
+        "BS한양",
+        "한양"
+      ]
+    },
+    {
+      "rank": 33,
+      "name": "금강주택",
+      "aliases": []
+    },
+    {
+      "rank": 34,
+      "name": "신세계건설",
+      "aliases": []
+    },
+    {
+      "rank": 35,
+      "name": "삼성이앤에이",
+      "aliases": [
+        "삼성E&A"
+      ]
+    },
+    {
+      "rank": 36,
+      "name": "자이씨앤에이",
+      "aliases": []
+    },
+    {
+      "rank": 37,
+      "name": "동원개발",
+      "aliases": []
+    },
+    {
+      "rank": 38,
+      "name": "씨제이대한통운",
+      "aliases": [
+        "CJ대한통운"
+      ]
+    },
+    {
+      "rank": 39,
+      "name": "반도건설",
+      "aliases": []
+    },
+    {
+      "rank": 40,
+      "name": "대광건영",
+      "aliases": []
+    },
+    {
+      "rank": 41,
+      "name": "중흥토건",
+      "aliases": []
+    },
+    {
+      "rank": 42,
+      "name": "라인건설",
+      "aliases": []
+    },
+    {
+      "rank": 43,
+      "name": "진흥기업",
+      "aliases": []
+    },
+    {
+      "rank": 44,
+      "name": "성도이엔지",
+      "aliases": []
+    },
+    {
+      "rank": 45,
+      "name": "에스지씨이앤씨",
+      "aliases": [
+        "SGC이앤씨"
+      ]
+    },
+    {
+      "rank": 46,
+      "name": "동양건설산업",
+      "aliases": []
+    },
+    {
+      "rank": 47,
+      "name": "대보건설",
+      "aliases": []
+    },
+    {
+      "rank": 48,
+      "name": "에이치에스화성",
+      "aliases": [
+        "HS화성"
+      ]
+    },
+    {
+      "rank": 49,
+      "name": "서한",
+      "aliases": []
+    },
+    {
+      "rank": 50,
+      "name": "엘티삼보",
+      "aliases": [
+        "LT삼보"
+      ]
+    },
+    {
+      "rank": 51,
+      "name": "라인산업",
+      "aliases": []
+    },
+    {
+      "rank": 52,
+      "name": "극동건설",
+      "aliases": []
+    },
+    {
+      "rank": 53,
+      "name": "경남기업",
+      "aliases": []
+    },
+    {
+      "rank": 54,
+      "name": "남광토건",
+      "aliases": []
+    },
+    {
+      "rank": 55,
+      "name": "동문건설",
+      "aliases": []
+    },
+    {
+      "rank": 56,
+      "name": "일성건설",
+      "aliases": []
+    },
+    {
+      "rank": 57,
+      "name": "케이알산업",
+      "aliases": [
+        "KR산업"
+      ]
+    },
+    {
+      "rank": 58,
+      "name": "아이에스동서",
+      "aliases": [
+        "IS동서"
+      ]
+    },
+    {
+      "rank": 59,
+      "name": "동원건설산업",
+      "aliases": []
+    },
+    {
+      "rank": 60,
+      "name": "자이에스앤디",
+      "aliases": [
+        "자이S&D"
+      ]
+    },
+    {
+      "rank": 61,
+      "name": "양우건설",
+      "aliases": []
+    },
+    {
+      "rank": 62,
+      "name": "신동아건설",
+      "aliases": []
+    },
+    {
+      "rank": 63,
+      "name": "대명건설",
+      "aliases": []
+    },
+    {
+      "rank": 64,
+      "name": "시티건설",
+      "aliases": []
+    },
+    {
+      "rank": 65,
+      "name": "동아지질",
+      "aliases": []
+    },
+    {
+      "rank": 66,
+      "name": "모아주택산업",
+      "aliases": []
+    },
+    {
+      "rank": 67,
+      "name": "태왕이앤씨",
+      "aliases": []
+    },
+    {
+      "rank": 68,
+      "name": "일신건영",
+      "aliases": []
+    },
+    {
+      "rank": 69,
+      "name": "대림",
+      "aliases": []
+    },
+    {
+      "rank": 70,
+      "name": "요진건설산업",
+      "aliases": []
+    },
+    {
+      "rank": 71,
+      "name": "금광기업",
+      "aliases": []
+    },
+    {
+      "rank": 72,
+      "name": "영진종합건설",
+      "aliases": []
+    },
+    {
+      "rank": 73,
+      "name": "금성백조건설",
+      "aliases": []
+    },
+    {
+      "rank": 74,
+      "name": "에스케이에코엔지니어링",
+      "aliases": [
+        "SK에코엔지니어링"
+      ]
+    },
+    {
+      "rank": 75,
+      "name": "에이스건설",
+      "aliases": []
+    },
+    {
+      "rank": 76,
+      "name": "삼환기업",
+      "aliases": []
+    },
+    {
+      "rank": 77,
+      "name": "우암건설",
+      "aliases": []
+    },
+    {
+      "rank": 78,
+      "name": "강산건설",
+      "aliases": []
+    },
+    {
+      "rank": 79,
+      "name": "씨에이이앤씨",
+      "aliases": []
+    },
+    {
+      "rank": 80,
+      "name": "우미개발",
+      "aliases": []
+    },
+    {
+      "rank": 81,
+      "name": "금성백조주택",
+      "aliases": []
+    },
+    {
+      "rank": 82,
+      "name": "원건설",
+      "aliases": []
+    },
+    {
+      "rank": 83,
+      "name": "서해종합건설",
+      "aliases": []
+    },
+    {
+      "rank": 84,
+      "name": "이안알앤씨",
+      "aliases": []
+    },
+    {
+      "rank": 85,
+      "name": "경동건설",
+      "aliases": []
+    },
+    {
+      "rank": 86,
+      "name": "보미건설",
+      "aliases": []
+    },
+    {
+      "rank": 87,
+      "name": "신원종합개발",
+      "aliases": []
+    },
+    {
+      "rank": 88,
+      "name": "화성개발",
+      "aliases": []
+    },
+    {
+      "rank": 89,
+      "name": "위본건설",
+      "aliases": []
+    },
+    {
+      "rank": 90,
+      "name": "보광종합건설",
+      "aliases": []
+    },
+    {
+      "rank": 91,
+      "name": "한양건설",
+      "aliases": []
+    },
+    {
+      "rank": 92,
+      "name": "모아종합건설",
+      "aliases": []
+    },
+    {
+      "rank": 93,
+      "name": "대상건설",
+      "aliases": []
+    },
+    {
+      "rank": 94,
+      "name": "이수건설",
+      "aliases": []
+    },
+    {
+      "rank": 95,
+      "name": "에스엠상선",
+      "aliases": [
+        "SM상선"
+      ]
+    },
+    {
+      "rank": 96,
+      "name": "까뮤이앤씨",
+      "aliases": []
+    },
+    {
+      "rank": 97,
+      "name": "농협네트웍스",
+      "aliases": []
+    },
+    {
+      "rank": 98,
+      "name": "동아건설산업",
+      "aliases": []
+    },
+    {
+      "rank": 99,
+      "name": "동양",
+      "aliases": []
+    },
+    {
+      "rank": 100,
+      "name": "풍림산업",
+      "aliases": []
+    }
+  ]
+}
