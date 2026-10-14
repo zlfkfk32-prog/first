@@ -9,6 +9,7 @@ from zoneinfo import ZoneInfo
 
 from .news import Article, Coverage, SOURCE_NAMES, collect, select, to_record
 from .pdf import render
+from .html import render as render_html
 from .rankings import DEFAULT_PATH, demo_roster, load_roster
 from .summaries import enrich
 
@@ -70,6 +71,7 @@ def main() -> int:
     stem = f"cardletter-{as_of:%Y-%m-%d}{suffix}"
     args.output.mkdir(parents=True, exist_ok=True)
     render(args.output / (stem + ".pdf"), cards, coverage, as_of, args.hours, args.demo, roster)
+    render_html(args.output / (stem + ".html"), cards, coverage, as_of, args.demo)
     record = {
         "as_of": as_of.isoformat(), "demo": args.demo, "lookback_hours": args.hours,
         "coverage": [asdict(c) for c in coverage], "cards": [to_record(c) for c in cards],
