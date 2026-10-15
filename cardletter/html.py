@@ -48,6 +48,18 @@ def article_box(card: Card, as_of: datetime, demo: bool) -> str:
     return '<article class="news-card">' + content + '</article>'
 
 
+def compact_card(card: Card, demo: bool) -> str:
+    summary = card.summary or '원문을 확인하지 못해 요약을 보류했습니다.'
+    if len(summary) > 150:
+        summary = summary[:149].rstrip() + '…'
+    content = f'<h3>{escape(card.article.title)}</h3><p>{escape(summary)}</p>'
+    if demo:
+        link = '<span class="meta">가상 예시 · 원문 없음</span>'
+    else:
+        link = f'<a href="{escape(card.summary_url or card.article.url, quote=True)}" target="_blank" rel="noopener noreferrer">원문 보기 ↗</a>'
+    return f'<article class="news-card compact">{content}<div class="card-foot">{link}</div></article>'
+
+
 def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datetime, demo: bool = False) -> None:
     weekday = ('월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일')[as_of.weekday()]
     title = f'{as_of:%Y/%m/%d}/{weekday} Daily News'
@@ -56,15 +68,23 @@ def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datet
     sections = []
     for i, label in enumerate(GROUPS):
         items = buckets[label]
-        contents = ''.join(article_box(c, as_of, demo) for c in items) or '<p class="empty">선정된 관련 기사가 없습니다. 수집 실패·검색 누락 가능성은 하단 상태에서 확인하세요.</p>'
-        sections.append(f'<section id="section-{i}"><h2>{label} <small>{len(items)}건</small></h2><p class="meta">{DESCRIPTIONS[i]}</p><div class="grid">{contents}</div></section>')
-    top = ''.join(article_box(c, as_of, demo) for c in cards[:3])
+        contents = ''.join(article_box(c, as_of, demo) for c in items) or '<p class="empty">선정된 관련 기사가 없습니다. 수집 상태 탭에서 조회 결과를 확인하세요.</p>'
+        sections.append(f'<section class="page" id="section-{i}" hidden><h2 tabindex="-1">{label} <small>{len(items)}건</small></h2><p class="meta">{DESCRIPTIONS[i]}</p><div class="grid">{contents}</div></section>')
+    lead = compact_card(cards[0], demo) if cards else '<p class="empty">선정 기사 없음 · 수집 상태 탭을 확인하세요.</p>'
+    top = ''.join(compact_card(c, demo) for c in cards[:3])
     timeline = ''.join(f'<li><time>{c.article.published.astimezone(as_of.tzinfo):%m.%d}</time> {escape(c.article.title)}</li>' for c in sorted(cards, key=lambda c: c.article.published, reverse=True)[:8])
     states = ''.join(f'<tr><th>{escape(c.name)}</th><td>{"가상 데이터" if demo else "조회 완료" if c.ok else "수집 미완료"}</td><td>{c.count}건</td><td>{escape(c.detail)}</td></tr>' for c in coverage)
-    lead = article_box(cards[0], as_of, demo) if cards else '<p class="empty">선정 기사 없음 · 아래 수집 상태를 확인하세요.</p>'
     notice = '가상 디자인 샘플 · 기사·회사·순위·요약은 실제 뉴스가 아닙니다.' if demo else '공개 원문 기반 브리핑 · 원문 미확인 기사 요약 보류'
-    html = '''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>''' + title + '''</title><style>
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:100px}body{margin:0;background:#f2f4f8;color:#182c40;font:16px/1.75 'Malgun Gothic',sans-serif}a{color:inherit}header{background:#1f3a68;color:white;padding:18px max(20px,calc((100vw - 1100px)/2))}h1{font-size:26px;margin:0}nav{position:sticky;top:0;background:white;border-bottom:1px solid #dde3ec;padding:12px;display:flex;gap:18px;overflow:auto;z-index:2}nav a{white-space:nowrap;font-size:14px}main{max-width:1140px;padding:24px 20px;margin:auto}section{margin:30px 0}h2{font-size:21px;border-bottom:2px solid #d7e1ed;padding-bottom:9px}h2 small{font-size:15px;color:#52677c}h3{font-size:18px;line-height:1.55;margin:12px 0}h4{font-size:14px;margin:14px 0 3px;color:#236b77}p{margin:5px 0 12px}small,.meta{font-size:12px;color:#52677c}header p{color:#d6e3f3}.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.tile{padding:16px;background:white;border-radius:12px;display:grid;text-decoration:none;gap:6px}.tile b{font-size:28px}.tile:hover,.news-card:hover{box-shadow:0 3px 15px #1f3a6820}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.news-card{background:white;border:1px solid #e1e6ed;border-radius:12px;padding:20px;overflow-wrap:anywhere}.article-link{display:block;text-decoration:none}.article-link:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #2a6f7f;outline-offset:3px}.badge{background:#eaf3f4;color:#236b77;padding:3px 9px;font-size:12px;border-radius:6px}details{margin-top:14px;background:#f6f8fb;padding:10px;font-size:13px}summary{cursor:pointer}ul{padding-left:22px}.notice,.empty{padding:14px;background:#fff8eb;border-radius:8px;color:#705124;font-size:14px}input{width:100%;padding:14px;border:1px solid #abb9c9;border-radius:8px;font:inherit}table{border-collapse:collapse;width:100%;font-size:12px}th,td{padding:10px;border-bottom:1px solid #dce3ed;text-align:left}time{color:#236b77;margin-right:12px}.status{overflow:auto}footer{font-size:12px;color:#52677c;border-top:1px solid #ccd6e0;padding-top:16px}[hidden]{display:none!important}@media(max-width:750px){.tiles{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}h1{font-size:21px}}@media print{nav,input,label[for=search]{display:none}.grid{display:block}.news-card{break-inside:avoid;margin-bottom:12px}header{background:white;color:#182c40}}
-</style></head><body>''' + f'''<header><h1>{title}</h1><p>한눈에 보는 요약부터 부문별 상세까지 · {as_of:%H:%M} KST 기준</p></header><nav aria-label="빠른 이동"><a href="#home">처음</a><a href="#highlights">오늘의 핵심</a>{''.join(f'<a href="#section-{i}">{label}</a>' for i,label in enumerate(GROUPS))}<a href="#sources">수집 상태</a></nav><main id="home"><p class="notice">{notice}</p><section><h2>메인 이슈</h2><p class="meta">관련성·공식 출처·최신성 기반 규칙 점수로 선정한 상위 기사입니다. 별도 중요도 평가나 사실 검증 결과는 아닙니다.</p>{lead}</section><section><h2>부문별로 찾아보기</h2><div class="tiles">{tiles}</div><p class="meta">상세 브리핑에 선정된 고유 기사 {len(cards)}건 기준 · 중복 분야 포함 · 전체 수집 수치나 전일 대비가 아닙니다. PDF는 이 중 최대 6건을 별도 요약합니다.</p></section><section id="highlights"><h2>오늘의 핵심 3건</h2><div class="grid">{top}</div></section><label for="search">회사명·주제 검색</label><input id="search" type="search" placeholder="예: 캐피탈, PF, 자동차, 보안" aria-describedby="search-status"><p id="search-status" class="meta" aria-live="polite">검색하면 아래 상세 기사만 필터링됩니다. 부문별 건수는 전체 선정 기준입니다.</p><div id="details">{''.join(sections)}</div><section><h2>최근 선정 기사 흐름</h2><p class="meta">기사 게시일 순서입니다. 같은 사건의 타임라인으로 검증한 내용은 아닙니다.</p><ul>{timeline}</ul></section><section id="sources"><h2>출처와 수집 상태</h2><div class="status"><table><thead><tr><th>출처</th><th>상태</th><th>원시 수집 수</th><th>참고</th></tr></thead><tbody>{states}</tbody></table></div></section><details><summary>금융 용어 사전</summary><ul>{''.join(f'<li><b>{escape(t)}</b> — {escape(d)}</li>' for t,d in GLOSSARY.items())}</ul></details><footer>업무 확인점과 용어 설명은 일반 참고 안내이며 기사에서 확인된 새로운 사실이 아닙니다. 부문 분류는 제목 키워드 기준입니다. 언론 보도/공식기관 발표 표시는 출처 유형이며 독립적인 사실 검증을 뜻하지 않습니다. 내부 개인정보 미사용 · 자동 메일 발송 미설정.</footer></main>''' + '''<script>const input=document.getElementById('search');input.addEventListener('input',()=>{const q=input.value.trim().toLocaleLowerCase();let count=0;document.querySelectorAll('#details .news-card').forEach(card=>{card.hidden=!card.textContent.toLocaleLowerCase().includes(q);if(!card.hidden)count++});document.getElementById('search-status').textContent=q?'검색 결과 '+count+'개 카드 (부문 중복 포함)':'모든 상세 기사를 표시합니다. 부문별 건수는 전체 선정 기준입니다.'});</script></body></html>'''
+    nav = '<a href="#home">홈</a>' + ''.join(f'<a href="#section-{i}">{label}</a>' for i,label in enumerate(GROUPS)) + '<a href="#sources">수집 상태</a>'
+    css = Path(__file__).with_name('briefing.css').read_text(encoding='utf-8')
+    script = Path(__file__).with_name('briefing.js').read_text(encoding='utf-8')
+    html = f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{title}</title><style>{css}</style></head><body>
+<header><h1>{title}</h1><p>{as_of:%H:%M} KST 기준 · {notice}</p></header>
+<nav aria-label="부문 메뉴"><div class="nav-inner">{nav}</div></nav>
+<main><div class="page" id="home"><section><h2>메인 이슈</h2>{lead}</section><section><h2>부문별로 찾아보기</h2><div class="tiles">{tiles}</div><p class="meta">선정 기사 {len(cards)}건 기준 · 관련 부문 중복 포함 · 전일 대비 수치가 아닙니다.</p></section><section id="highlights"><h2>오늘의 핵심</h2><div class="grid">{top}</div></section></div>
+<div id="detail-tools" hidden><label for="search">이 부문에서 회사명·주제 검색</label><input id="search" type="search" placeholder="예: 캐피탈, PF, 자동차, 보안" aria-describedby="search-status"><p id="search-status" class="meta" aria-live="polite"></p></div>
+<div id="details">{''.join(sections)}</div>
+<section class="page" id="sources" hidden><h2 tabindex="-1">출처와 수집 상태</h2><div class="status"><table><thead><tr><th>출처</th><th>상태</th><th>원시 수집 수</th><th>참고</th></tr></thead><tbody>{states}</tbody></table></div><h2>최근 선정 기사 흐름</h2><p class="meta">기사 게시일 순서이며 같은 사건의 타임라인으로 검증한 내용은 아닙니다.</p><ul>{timeline}</ul><details><summary>금융 용어 사전</summary><ul>{''.join(f'<li><b>{escape(t)}</b> — {escape(d)}</li>' for t,d in GLOSSARY.items())}</ul></details><p class="meta">업무 확인점과 용어 설명은 일반 참고 안내입니다. 출처 표시는 독립적인 사실 검증을 뜻하지 않습니다. 부문은 제목 키워드로 분류합니다. 내부 개인정보 미사용 · 자동 메일 발송 미설정.</p></section>
+<noscript><p class="notice">부문 탭을 사용하려면 브라우저에서 JavaScript를 허용해 주세요.</p></noscript></main><script>{script}</script></body></html>'''
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html, encoding='utf-8')

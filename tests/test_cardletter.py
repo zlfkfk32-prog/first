@@ -294,3 +294,23 @@ class DetailedBriefingTests(unittest.TestCase):
         long, _ = extract_summary(raw, '금융회사 자금 조달', limit=480)
         self.assertGreater(len(long), len(short))
         self.assertIn('상환 구조', long)
+
+
+class HomeNavigationTests(unittest.TestCase):
+    def test_home_is_compact_and_other_pages_start_hidden(self):
+        from bs4 import BeautifulSoup
+        from cardletter.html import render as render_html
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'brief.html'
+            render_html(path, sample_cards(), [], NOW)
+            soup = BeautifulSoup(path.read_text(), 'html.parser')
+            home = soup.select_one('#home')
+            self.assertEqual([h.get_text() for h in home.select('h2')], ['메인 이슈', '부문별로 찾아보기', '오늘의 핵심'])
+            self.assertNotIn('업무에서 확인할 점', home.get_text())
+            for page in soup.select('.page:not(#home)'):
+                self.assertTrue(page.has_attr('hidden'))
+            for card in home.select('.news-card'):
+                self.assertEqual(card.select_one('.card-foot a').get_text(), '원문 보기 ↗')
+                self.assertTrue(card.select_one('.card-foot a')['href'].startswith('https://'))
+            self.assertIn('justify-content:center', soup.style.get_text())
+            self.assertEqual(len(soup.select('nav a[href^="#section-"]')), 8)
