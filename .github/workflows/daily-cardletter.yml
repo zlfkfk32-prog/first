@@ -1,9 +1,14 @@
-name: Daily public-source PDF cardletter
+name: Real estate daily newsletter (opt-in)
 on:
   schedule:
-    # 23:00 UTC = next day 08:00 Asia/Seoul, every day.
+    # Target 08:00 KST next day. GitHub schedules may be delayed.
     - cron: '0 23 * * *'
   workflow_dispatch:
+    inputs:
+      demo:
+        description: 'Use fictional data; do not call NAVER or send mail'
+        type: boolean
+        default: true
 permissions:
   contents: read
 concurrency:
@@ -11,8 +16,20 @@ concurrency:
   cancel-in-progress: false
 jobs:
   generate:
+    # Disabled unless explicitly enabled in repository settings; manual defaults to demo.
+    if: github.event_name == 'workflow_dispatch' || vars.ENABLE_DAILY_NEWS == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    env:
+      NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+      NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+      M365_TENANT_ID: ${{ secrets.M365_TENANT_ID }}
+      M365_CLIENT_ID: ${{ secrets.M365_CLIENT_ID }}
+      M365_CLIENT_SECRET: ${{ secrets.M365_CLIENT_SECRET }}
+      M365_SENDER: ${{ secrets.M365_SENDER }}
+      M365_TO: ${{ secrets.M365_TO }}
+      SEND_MAIL: ${{ vars.ENABLE_DAILY_EMAIL }}
+      DEMO: ${{ github.event_name == 'workflow_dispatch' && inputs.demo }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,12 +37,36 @@ jobs:
           python-version: '3.12'
       - run: bash scripts/install.sh
       - run: .venv/bin/python -m unittest discover -s tests -v
-      - run: .venv/bin/python -m cardletter
-      - name: Upload PDF and source status (including failure report)
+      - id: day
+        run: echo "date=$(.venv/bin/python -c 'from datetime import datetime; from zoneinfo import ZoneInfo; print(datetime.now(ZoneInfo("Asia/Seoul")).strftime("%Y-%m-%d"))')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        id: mailstate
+        if: env.DEMO != 'true' && env.SEND_MAIL == 'true'
+        with:
+          path: output/.mail-state
+          key: mail-state-${{ github.repository_id }}-${{ steps.day.outputs.date }}
+      - name: Generate newsletter (send only when explicitly enabled)
+        run: |
+          if [ "$DEMO" = "true" ]; then
+            .venv/bin/python run.py --demo
+          elif [ "$SEND_MAIL" = "true" ]; then
+            .venv/bin/python run.py --send-email
+          else
+            .venv/bin/python run.py
+          fi
+      - uses: actions/cache/save@v4
+        if: always() && env.DEMO != 'true' && env.SEND_MAIL == 'true' && steps.mailstate.outputs.cache-hit != 'true'
+        with:
+          path: output/.mail-state
+          key: mail-state-${{ github.repository_id }}-${{ steps.day.outputs.date }}
+      - name: Save PDF, browser HTML and source audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: daily-cardletter-${{ github.run_id }}
-          path: output/
+          name: real-estate-daily-${{ github.run_id }}
+          path: |
+            output/*.pdf
+            output/*.html
+            output/*.json
           if-no-files-found: warn
           retention-days: 7

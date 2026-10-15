@@ -45,7 +45,7 @@ def shortened(text: str, count: int) -> str:
 
 
 def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datetime,
-           hours: int, demo: bool = False, roster: Roster | None = None) -> None:
+           hours: int, demo: bool = False, roster: Roster | None = None, estate: bool = False) -> None:
     if len(cards) > 6:
         raise ValueError("최대 6개 카드만 지원합니다")
     setup_fonts()
@@ -65,7 +65,7 @@ def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datet
     paragraph(c, "PUBLIC FINANCE / MORNING BRIEF", margin, height - 17,
               content_width, 8, colors.HexColor("#85D8D0"), bold=True)
     paragraph(c, title, margin, height - 36, content_width, 19, colors.white, True)
-    paragraph(c, "부동산 PF · 캐피탈 · 개인/리테일 · TOP100 시공사", margin, height - 70,
+    paragraph(c, "시공사 · 수도권 · 비수도권 · PF권역 주요뉴스" if estate else "부동산 PF · 캐피탈 · 개인/리테일 · TOP100 시공사", margin, height - 70,
               content_width, 10, colors.white)
     paragraph(c, f"{as_of:%Y.%m.%d}  |  {as_of:%H:%M} KST 기준  |  최근 {hours}시간  |  {len(cards)}건",
               margin, height - 90, content_width, 7.5, colors.HexColor("#BED0DE"))
@@ -119,21 +119,31 @@ def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datet
         paragraph(c, escape(message), margin + 14, top - 18, content_width - 28, 9, GRAY, max_height=40)
         return top - slots * 82
 
-    main = [card for card in cards if card.category not in ("캐피탈업권", "TOP100 시공사", "개인·리테일 금융")]
-    capital = [card for card in cards if card.category == "캐피탈업권"]
-    retail = [card for card in cards if card.category == "개인·리테일 금융"]
-    contractors = [card for card in cards if card.category == "TOP100 시공사"]
-    if len(main) > 2 or len(capital) > 1 or len(contractors) > 2 or len(retail) > 1:
-        raise ValueError("칸별 카드 한도는 PF·정책 2 / 캐피탈 1 / 개인·리테일 1 / 시공사 2입니다")
-    top = height - 156
-    sections = (
-        ("01  부동산 PF · 정책", main, 2, "조회 기간에 조건을 충족한 PF·정책 소식이 없습니다."),
-        ("02  캐피탈업권", capital, 1, "조회 기간에 조건을 충족한 캐피탈사 금융 소식이 없습니다."),
-        ("03  개인·리테일 금융", retail, 1, "조회 기간에 조건을 충족한 개인·리테일 금융 소식이 없습니다."),
-        ("04  TOP100 시공사 주요 뉴스", contractors, 2,
-         "공식 TOP100 명단 확인 대기 · 대상 시공사의 순위와 소속을 아직 검증하지 못했습니다."
-         if not roster else "조회 기간에 해당 TOP100 시공사 주요 뉴스가 선정되지 않았습니다."),
-    )
+    if estate:
+        from .estate import GROUPS
+        budgets = (2, 1, 1, 2)
+        sections = tuple((f'{i+1:02d}  {label}', [card for card in cards if card.category == label], slots,
+                          '조회 기간에 원문 검증을 통과한 선정 기사가 없습니다.')
+                         for i, (label, slots) in enumerate(zip(GROUPS, budgets)))
+        if any(len(items) > slots for _,items,slots,_ in sections):
+            raise ValueError('칸별 기사 한도 초과')
+        top = height - 156
+    else:
+        main = [card for card in cards if card.category not in ("캐피탈업권", "TOP100 시공사", "개인·리테일 금융")]
+        capital = [card for card in cards if card.category == "캐피탈업권"]
+        retail = [card for card in cards if card.category == "개인·리테일 금융"]
+        contractors = [card for card in cards if card.category == "TOP100 시공사"]
+        if len(main) > 2 or len(capital) > 1 or len(contractors) > 2 or len(retail) > 1:
+            raise ValueError("칸별 카드 한도는 PF·정책 2 / 캐피탈 1 / 개인·리테일 1 / 시공사 2입니다")
+        top = height - 156
+        sections = (
+            ("01  부동산 PF · 정책", main, 2, "조회 기간에 조건을 충족한 PF·정책 소식이 없습니다."),
+            ("02  캐피탈업권", capital, 1, "조회 기간에 조건을 충족한 캐피탈사 금융 소식이 없습니다."),
+            ("03  개인·리테일 금융", retail, 1, "조회 기간에 조건을 충족한 개인·리테일 금융 소식이 없습니다."),
+            ("04  TOP100 시공사 주요 뉴스", contractors, 2,
+             "공식 TOP100 명단 확인 대기 · 대상 시공사의 순위와 소속을 아직 검증하지 못했습니다."
+             if not roster else "조회 기간에 해당 TOP100 시공사 주요 뉴스가 선정되지 않았습니다."),
+        )
     for label, section_cards, slots, empty_message in sections:
         paragraph(c, label, margin, top, content_width, 9, TEAL, True, max_height=14)
         top -= 18
@@ -153,9 +163,9 @@ def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datet
     paragraph(c, ranking_label, margin, 59, content_width, 6.8, GRAY, max_height=11)
     if roster and not demo:
         c.linkURL(roster.source_url, (margin, 46, width - margin, 60), relative=0)
-    paragraph(c, "요약: 원문 발췌 또는 언론사 설명문 · 원문 미확인 시 요약 보류 · 내부 개인정보 미사용",
+    paragraph(c, "NAVER 뉴스 검색 · 원문 확인 기사만 수록 · 내부 개인정보 미사용" if estate else "요약: 원문 발췌 또는 언론사 설명문 · 원문 미확인 시 요약 보류 · 내부 개인정보 미사용",
               margin, 40, content_width, 6.5, GRAY, max_height=11)
-    paragraph(c, "공식기관 최신 게시판·공개 RSS 검색 기준으로 누락 가능 · 날짜만 제공된 공지는 기간 내 날짜 기준",
+    paragraph(c, "검사 시점 원문 접속·기사 제목·보도자료 표시 확인 · 이후 원문 변경/차단 및 보도자료 식별 누락 가능" if estate else "공식기관 최신 게시판·공개 RSS 검색 기준으로 누락 가능 · 날짜만 제공된 공지는 기간 내 날짜 기준",
               margin, 26, content_width, 6.5, GRAY, max_height=11)
     c.showPage()
     c.save()

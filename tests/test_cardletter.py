@@ -281,7 +281,7 @@ class DetailedBriefingTests(unittest.TestCase):
             self.assertIn('무슨 내용인가요?', soup.get_text())
             self.assertIn('일반 검토 안내', soup.get_text())
             self.assertIn('용어 쉽게 보기', soup.get_text())
-            self.assertEqual(len(soup.select('#details section')), 8)
+            self.assertEqual(len(soup.select('#details section')), 4)
             self.assertEqual(len(soup.select('script')), 1)
             for link in soup.select('a[href^="#"]'):
                 self.assertIsNotNone(soup.find(id=link['href'][1:]))
@@ -313,7 +313,7 @@ class HomeNavigationTests(unittest.TestCase):
                 self.assertEqual(card.select_one('.card-foot a').get_text(), '원문 보기 ↗')
                 self.assertTrue(card.select_one('.card-foot a')['href'].startswith('https://'))
             self.assertIn('justify-content:center', soup.style.get_text())
-            self.assertEqual(len(soup.select('nav a[href^="#section-"]')), 8)
+            self.assertEqual(len(soup.select('nav a[href^="#section-"]')), 4)
 
 
 class ProjectFocusTests(unittest.TestCase):

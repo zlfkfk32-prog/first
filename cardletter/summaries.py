@@ -1,7 +1,6 @@
 """Short extractive summaries from public publisher text, with explicit failures."""
 from __future__ import annotations
 
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 import ipaddress
@@ -13,7 +12,6 @@ from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from bs4 import BeautifulSoup
-from googlenewsdecoder import gnews_decoder_async
 
 from .news import Card, clean_text, normalized_title
 
@@ -141,20 +139,10 @@ def summarize_card(card: Card, url: str) -> Card:
 
 
 def enrich(cards: list[Card]) -> list[Card]:
-    google = [c for c in cards if urlsplit(c.article.url).hostname == "news.google.com"]
-    decoded = {}
-    if google:
-        try:
-            results = asyncio.run(gnews_decoder_async([c.article.url for c in google], timeout=10, concurrency=4))
-            decoded = {card.article.url: result.get("decoded_url", "")
-                       for card, result in zip(google, results) if result.get("success")}
-        except Exception:
-            # Resolution failures remain explicit; no invented summary or access-control bypass.
-            decoded = {}
+    # Legacy public-article helper; production collection uses NAVER verify() only.
     def work(card):
-        url = decoded.get(card.article.url, "") if card in google else card.article.url
-        if not url:
-            return replace(card, summary="", summary_kind="확인 불가", summary_url="", summary_detail="원문 링크 해석 실패")
-        return summarize_card(card, url)
+        if urlsplit(card.article.url).hostname == "news.google.com":
+            return replace(card, summary="", summary_kind="확인 불가", summary_url="", summary_detail="검색 중계 URL 사용 안 함")
+        return summarize_card(card, card.article.url)
     with ThreadPoolExecutor(max_workers=4) as pool:
         return list(pool.map(work, cards))

@@ -4,31 +4,20 @@ from html import escape
 from pathlib import Path
 from .news import Card, Coverage
 
-GROUPS = ('부동산 PF·정책', '업권 공통·캐피탈', '기업금융·IB', '개인·리테일 금융', '투자', '리스크관리', 'IT·디지털', 'TOP100 시공사')
-DESCRIPTIONS = ('사업장 PF·공사비·인허가·정책', '부동산 사업장 대주단·담보·조달', '사업장 인수·매각·공매·채권 정리', '지역별 분양·입주·미분양·현장 일정', '개발사업·리츠·물류센터·산업단지', '시공사 부도·부실·하자·사고·공사 중단', '공사현장 디지털·스마트건설·안전기술', '공식 TOP100 시공사의 현장·주요 이슈')
+from .estate import GROUPS, DESCRIPTIONS, groups, regions, is_pf
 
 GLOSSARY = {
-    'PF': '개발사업에서 생길 수익을 주요 상환재원으로 삼는 금융입니다.',
+    'PF': '부동산 개발사업에서 생길 수익을 주요 상환재원으로 삼는 금융입니다.',
+    '브리지론': '토지 확보 등 초기 개발 단계에서 본PF 전까지 사용하는 단기 자금입니다.',
+    '본PF': '인허가·시공 등 사업 조건을 갖춘 뒤 공사와 사업 진행에 필요한 자금을 조달하는 단계입니다.',
     'NPL': '정상적인 원리금 회수가 어려운 부실채권을 뜻합니다.',
+    '공정률': '전체 공사 중 얼마나 진행되었는지를 나타내는 비율로, 산정 기준을 함께 확인해야 합니다.',
+    '하자': '완성된 시설이나 공사 결과에 계약상·기술상 요구와 다른 결함이 있는 상태를 뜻합니다.',
     '충당금': '앞으로 발생할 수 있는 손실에 대비해 회계상 미리 반영하는 금액입니다.',
-    '연체율': '전체 대출 중 약속한 날짜에 상환되지 않은 대출의 비율입니다. 집계 기준도 확인해야 합니다.',
-    '유동성': '필요할 때 현금을 마련해 지급 의무를 이행할 수 있는 정도입니다.',
-    '여전채': '캐피탈사·카드사 등 여신전문금융회사가 자금을 조달하기 위해 발행하는 채권입니다.',
-    '인수금융': '기업 인수에 필요한 자금을 빌려주거나 조달하는 금융입니다.',
-    '리스': '금융회사가 보유한 차량·설비 등을 계약 기간 동안 이용료를 내고 사용하는 방식입니다.',
+    '미분양': '분양을 진행했지만 계약되지 않은 물량으로, 준공 전후와 지역을 구분해야 합니다.',
     '시공능력평가': '공사 실적과 경영·기술능력 등을 종합한 평가입니다. 순위가 신용등급을 뜻하지는 않습니다.',
-    '자기자본비율': '관련 자산·위험 등에 비해 자기자본을 얼마나 보유하는지 보는 지표로 제도마다 산식이 다릅니다.',
+    '책임준공': '정해진 조건에 따라 공사를 완성할 의무로, 기한·예외·미이행 책임을 계약에서 확인해야 합니다.',
 }
-
-
-def groups(card: Card) -> tuple[str, ...]:
-    primary = {'캐피탈업권': GROUPS[1], '개인·리테일 금융': GROUPS[3], 'TOP100 시공사': GROUPS[7], '기업금융·IB': GROUPS[2], '투자': GROUPS[4], '리스크관리': GROUPS[5], 'IT·디지털': GROUPS[6]}.get(card.category, GROUPS[0])
-    result = [primary]
-    text = card.article.title.lower()
-    for label, words in ((GROUPS[2], ('인수금융', '기업금융', '기업대출', '구조화', 'npl', 'pf', '공매', '사업장 매각')), (GROUPS[4], ('지분투자', '신기술금융', '펀드')), (GROUPS[5], ('연체', '충당금', '건전성', '유동성', '부실', '신용', '안전', '부도', '하자', '사고', '붕괴', '회생', '공사중단')), (GROUPS[6], ('해킹', '정보유출', '정보 유출', '디지털', '보안', '인공지능'))):
-        if label not in result and any(word in text for word in words):
-            result.append(label)
-    return tuple(result)
 
 
 def article_box(card: Card, as_of: datetime, demo: bool) -> str:
@@ -40,10 +29,13 @@ def article_box(card: Card, as_of: datetime, demo: bool) -> str:
     rank = ' · 시평 ' + ', '.join(map(str, card.contractor_ranks)) + '위' if card.contractor_ranks else ''
     regions = [region for region in ('서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산', '세종', '강원', '충북', '충남', '충청', '전북', '전남', '전라', '경북', '경남', '경상', '제주') if region in a.title]
     region_note = '제목에 표시된 지역: ' + (', '.join(regions) if regions else '미표시 · 원문 확인 필요')
+    if is_pf(a.title):
+        from .estate import regions as pf_regions
+        region_note += ' · PF 권역: ' + (' · '.join(pf_regions(a.title)) or '지역 미확인')
     text = a.title + ' ' + card.summary
     terms = ''.join(f'<li><b>{escape(term)}</b> — {escape(definition)}</li>' for term, definition in GLOSSARY.items() if term.lower() in text.lower())
     glossary = f'<details><summary>용어 쉽게 보기</summary><ul>{terms}</ul></details>' if terms else ''
-    inner = f'<span class="badge">{label}</span><h3>{title}</h3><div class="meta">{escape(a.publisher)} · {stamp}{rank}</div><div class="meta">{escape(region_note)}</div><h4>무슨 내용인가요?</h4><p>{body}</p><h4>업무에서 확인할 점 <small>일반 검토 안내</small></h4><p>{escape(card.checkpoint)}</p><div class="meta">요약 방식: {escape(card.summary_kind)} · {"본문/설명문 추출 완료 · 사실의 독립 검증을 뜻하지 않음" if card.summary else "추가 원문 확인 필요"}</div>{glossary}'
+    inner = f'<span class="badge">{label}</span><h3>{title}</h3><div class="meta">{escape(a.publisher)} · {stamp}{rank}</div><div class="meta">{escape(region_note)}</div><h4>무슨 내용인가요?</h4><p>{body}</p><h4>업무에서 확인할 점 <small>일반 검토 안내</small></h4><p>{escape(card.checkpoint)}</p><div class="meta">요약 방식: {escape(card.summary_kind)} · {"원문 접속·제목 검사 통과 · 보도자료 표시 제외 · 사실의 독립 검증 아님" if card.summary else "추가 원문 확인 필요"}</div>{glossary}'
     if demo:
         content = f'<div>{inner}</div>'
     else:
@@ -72,12 +64,23 @@ def render(path: Path, cards: list[Card], coverage: list[Coverage], as_of: datet
     for i, label in enumerate(GROUPS):
         items = buckets[label]
         contents = ''.join(article_box(c, as_of, demo) for c in items) or '<p class="empty">선정된 관련 기사가 없습니다. 수집 상태 탭에서 조회 결과를 확인하세요.</p>'
+        if label == GROUPS[3] and items:
+            blocks = []
+            for region in ('수도권', '비수도권', '지역 미확인'):
+                regional = [c for c in items if (region in regions(c.article.title) if region != '지역 미확인' else not regions(c.article.title))]
+                block = ''.join(article_box(c, as_of, demo) for c in regional) or '<p class="meta">선정 기사 없음</p>'
+                blocks.append(f'<div><h3>{region} PF</h3><div class="grid">{block}</div></div>')
+            contents = ''.join(blocks)
         sections.append(f'<section class="page" id="section-{i}" hidden><h2 tabindex="-1">{label} <small>{len(items)}건</small></h2><p class="meta">{DESCRIPTIONS[i]}</p><div class="grid">{contents}</div></section>')
     lead = compact_card(cards[0], demo) if cards else '<p class="empty">선정 기사 없음 · 수집 상태 탭을 확인하세요.</p>'
     top = ''.join(compact_card(c, demo) for c in cards[:3])
     timeline = ''.join(f'<li><time>{c.article.published.astimezone(as_of.tzinfo):%m.%d}</time> {escape(c.article.title)}</li>' for c in sorted(cards, key=lambda c: c.article.published, reverse=True)[:8])
     states = ''.join(f'<tr><th>{escape(c.name)}</th><td>{"가상 데이터" if demo else "조회 완료" if c.ok else "수집 미완료"}</td><td>{c.count}건</td><td>{escape(c.detail)}</td></tr>' for c in coverage)
-    notice = '가상 디자인 샘플 · 기사·회사·순위·요약은 실제 뉴스가 아닙니다.' if demo else '공개 원문 기반 브리핑 · 원문 미확인 기사 요약 보류'
+    notice = '가상 디자인 샘플 · 기사·회사·순위·요약은 실제 뉴스가 아닙니다.' if demo else 'NAVER 검색 기반 · 원문 검증 통과 기사만 수록 · 보도자료 표시 제외'
+    if not demo and coverage and not any(c.ok for c in coverage):
+        notice = '뉴스 수집 실패 · 설정/권한을 확인하세요. 확인된 최신 뉴스가 없습니다.'
+    elif not demo and any(not c.ok for c in coverage):
+        notice += ' · 일부 수집 미완료'
     nav = '<a href="#home">홈</a>' + ''.join(f'<a href="#section-{i}">{label}</a>' for i,label in enumerate(GROUPS)) + '<a href="#sources">수집 상태</a>'
     css = Path(__file__).with_name('briefing.css').read_text(encoding='utf-8')
     script = Path(__file__).with_name('briefing.js').read_text(encoding='utf-8')
