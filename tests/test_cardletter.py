@@ -257,3 +257,40 @@ class PdfTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DetailedBriefingTests(unittest.TestCase):
+    def test_extended_topics_stay_out_of_one_page_slots(self):
+        titles = ["금융권 해킹 정보유출 점검", "금융권 인수금융 구조 점검", "신기술금융 펀드 투자 확대", "금융권 연체율 충당금 점검"]
+        articles = demo_articles(NOW) + [Article(t, f"https://example.com/extra/{i}", "테스트", NOW, "테스트") for i,t in enumerate(titles)]
+        detail = select(articles, NOW, 24, roster=ROSTER, detailed=True, limit=32)
+        self.assertTrue({"IT·디지털", "기업금융·IB", "투자", "리스크관리"}.issubset({c.category for c in detail}))
+        digest = select(articles, NOW, 24, roster=ROSTER)
+        self.assertEqual(len(digest), 6)
+        self.assertFalse(any(c.category in {"IT·디지털", "기업금융·IB", "투자", "리스크관리"} for c in digest))
+
+    def test_detail_html_navigation_labels_and_escaping(self):
+        from bs4 import BeautifulSoup
+        from cardletter.html import render as render_html
+        cards = sample_cards()
+        cards[0] = replace(cards[0], summary='<script>alert(1)</script> PF 설명', checkpoint='원문 확인 안내')
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'brief.html'
+            render_html(path, cards, [Coverage('공개', True, 2)], NOW)
+            soup = BeautifulSoup(path.read_text(), 'html.parser')
+            self.assertIn('무슨 내용인가요?', soup.get_text())
+            self.assertIn('일반 검토 안내', soup.get_text())
+            self.assertIn('용어 쉽게 보기', soup.get_text())
+            self.assertEqual(len(soup.select('#details section')), 8)
+            self.assertEqual(len(soup.select('script')), 1)
+            for link in soup.select('a[href^="#"]'):
+                self.assertIsNotNone(soup.find(id=link['href'][1:]))
+            self.assertTrue(soup.select('.news-card a.article-link'))
+
+    def test_longer_extraction_preserves_source_facts(self):
+        content = ('금융회사는 자금 조달 조건을 점검하고 대출 건전성과 상환 구조를 관리하며 ' + '관련 계약과 기준일 및 대상 자산을 확인하고 ' * 4 + '심사 체계를 검토한다고 밝혔다. ') * 4
+        raw = ('<article><p>' + content + '</p></article>').encode()
+        short, _ = extract_summary(raw, '금융회사 자금 조달')
+        long, _ = extract_summary(raw, '금융회사 자금 조달', limit=480)
+        self.assertGreater(len(long), len(short))
+        self.assertIn('상환 구조', long)

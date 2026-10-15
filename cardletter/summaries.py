@@ -52,7 +52,7 @@ def brief(text: str, limit: int = 112) -> str:
     return " ".join(selected)
 
 
-def extract_summary(data: bytes, title: str) -> tuple[str, str]:
+def extract_summary(data: bytes, title: str, limit: int = 112) -> tuple[str, str]:
     soup = BeautifulSoup(data, "html.parser")
     page_text = soup.get_text(" ", strip=True)
     if re.search(r"Access Denied|Checking your browser|접근.{0,5}차단|로그인 후.{0,12}기사", page_text, re.I):
@@ -101,13 +101,13 @@ def extract_summary(data: bytes, title: str) -> tuple[str, str]:
     for body in bodies:
         text = clean_text(body)
         if len(text) >= 40:
-            return brief(text), "본문 발췌"
+            return brief(text, limit), "본문 발췌"
     # The publisher's own article description is acceptable, but label its origin explicitly.
     for attrs in ({"property": "og:description"}, {"name": "description"}):
         meta = soup.find("meta", attrs=attrs)
         text = clean_text(meta.get("content", "")) if meta else ""
         if len(text) >= 40 and normalized_title(text) != normalized_title(title):
-            return brief(text), "출처 요약문"
+            return brief(text, limit), "출처 요약문"
     return "", "본문 식별 불가"
 
 
@@ -131,7 +131,7 @@ def summarize_card(card: Card, url: str) -> Card:
             data = response.read(2_000_001)
         if len(data) > 2_000_000:
             raise ValueError("본문 크기 제한 초과")
-        summary, kind = extract_summary(data, card.article.title)
+        summary, kind = extract_summary(data, card.article.title, limit=480)
         if not summary:
             return replace(card, summary="", summary_kind="확인 불가", summary_url=url, summary_detail=kind)
         return replace(card, summary=summary, summary_kind=kind, summary_url=url, summary_detail="")

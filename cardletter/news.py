@@ -30,6 +30,10 @@ FEEDS = (
     Feed("부동산 PF·금융", '"부동산" (PF OR 프로젝트파이낸싱 OR 금융 OR 대출)'),
     # Do not put sports exclusions in the search itself: indexed sidebars can hide legitimate finance stories.
     # Business/company validation happens on each returned headline below.
+    Feed("기업금융·IB", '금융 (인수금융 OR 기업대출 OR 구조화금융 OR NPL)'),
+    Feed("투자·신기술금융", '캐피탈 (신기술금융 OR 지분투자 OR 펀드)'),
+    Feed("리스크관리", '금융 (연체율 OR 충당금 OR 건전성)'),
+    Feed("IT·디지털", '금융 (정보보호 OR 해킹 OR 전자금융 OR 인공지능)'),
     Feed("캐피탈업권", '캐피탈 OR 현대커머셜'),
     Feed("개인·리테일 금융", '개인대출 OR 가계대출 OR 자동차금융 OR 오토리스 OR 할부금융 OR 금융소비자'),
 )
@@ -259,6 +263,14 @@ def classify(article: Article, roster: Roster | None = None) -> tuple[str, str, 
         return "부동산 PF", "사업성·상환재원·담보 및 부동산 금융 심사에 적용할 변화가 있는지 확인하세요.", 120
     if "부동산" in title and any(word in title for word in ("금융", "대출", "담보", "조달")):
         return "부동산 금융", "담보가치·조달 여건과 부동산 금융 심사 기준의 변화를 확인하세요.", 115
+    if any(word in title for word in ("해킹", "정보유출", "정보 유출", "보안", "전자금융", "디지털", "인공지능")) and any(word in title for word in ("금융", "은행", "캐피탈", "여전")):
+        return "IT·디지털", "외부 접점·접근권한·고객 안내와 관련 당국 조치를 원문에서 확인하세요.", 95
+    if any(word in title for word in ("인수금융", "기업금융", "기업대출", "구조화금융", "npl")):
+        return "기업금융·IB", "거래 구조·상환재원·신용보강 조건의 변화를 원문에서 확인하세요.", 95
+    if any(word in title for word in ("신기술금융", "지분투자", "펀드")) and any(word in title for word in ("금융", "캐피탈", "투자")):
+        return "투자", "투자 대상·회수 계획·손실 부담 조건을 원문에서 확인하세요.", 85
+    if any(word in title for word in ("연체", "충당금", "건전성")) and any(word in title for word in ("금융", "은행", "캐피탈", "여전")):
+        return "리스크관리", "지표의 기준일·대상 업권·비교 기간을 원문에서 확인하세요.", 90
     if article.official and any(word in title for word in ("금융", "규제", "정책", "건설")):
         return "정책·감독", "시행일·적용 대상·유예 기간과 여신전문금융회사 해당 여부를 원문에서 확인하세요.", 90
     if any(word in title for word in ("부동산", "주택", "미분양")):
@@ -271,7 +283,7 @@ def normalized_title(title: str) -> str:
 
 
 def select(articles: list[Article], as_of: datetime, hours: int, limit: int = 6,
-           roster: Roster | None = None) -> list[Card]:
+           roster: Roster | None = None, detailed: bool = False) -> list[Card]:
     candidates = []
     cutoff = as_of - timedelta(hours=hours)
     for article in articles:
@@ -300,8 +312,18 @@ def select(articles: list[Article], as_of: datetime, hours: int, limit: int = 6,
         ).ratio() >= 0.84 for other in unique):
             continue
         unique.append(card)
+    if detailed:
+        counts = {}
+        result = []
+        for card in unique:
+            if counts.get(card.category, 0) < 3:
+                result.append(card)
+                counts[card.category] = counts.get(card.category, 0) + 1
+            if len(result) >= limit:
+                break
+        return result
     # Fixed section budgets prevent construction/capital news from disappearing behind housing news.
-    main = [c for c in unique if c.category not in ("TOP100 시공사", "캐피탈업권", "개인·리테일 금융")]
+    main = [c for c in unique if c.category not in ("TOP100 시공사", "캐피탈업권", "개인·리테일 금융", "기업금융·IB", "투자", "리스크관리", "IT·디지털")]
     primary = main[:1]
     official = next((c for c in main if c.article.official and c not in primary), None)
     if official:
