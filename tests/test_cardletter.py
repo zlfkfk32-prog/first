@@ -314,3 +314,28 @@ class HomeNavigationTests(unittest.TestCase):
                 self.assertTrue(card.select_one('.card-foot a')['href'].startswith('https://'))
             self.assertIn('justify-content:center', soup.style.get_text())
             self.assertEqual(len(soup.select('nav a[href^="#section-"]')), 8)
+
+
+class ProjectFocusTests(unittest.TestCase):
+    def article(self, title, index=0, official=False):
+        return Article(title, f'https://example.com/project/{index}', '공개 출처', NOW, '공사현장', official)
+
+    def test_major_contractor_issue_leads_before_routine_pf(self):
+        items = [self.article('서울 부동산 PF 사업성 점검', 0, True), self.article('샘플건설057 부산 현장 하자 발생', 1), self.article('샘플건설001 서울 정비사업 수주', 2)]
+        cards = select(items, NOW, 24, roster=ROSTER, detailed=True, project=True)
+        self.assertIn('하자 발생', cards[0].article.title)
+        self.assertEqual(cards[0].contractor_ranks, (57,))
+        self.assertGreater(cards[0].score, cards[1].score)
+
+    def test_prevention_is_not_reported_as_major_incident(self):
+        from cardletter.project_focus import major_issue
+        for title in ('건설현장 안전사고 예방 교육', '샘플건설001 무사고 캠페인', '샘플건설001 부도설 부인'):
+            self.assertFalse(major_issue(title, ROSTER))
+        for title in ('시공사 법정관리 신청', '부산 공사현장 붕괴 사고 발생', '아파트 부실시공 하자 판결'):
+            self.assertTrue(major_issue(title, ROSTER))
+
+    def test_project_relevance_and_regional_sites(self):
+        unrelated = [self.article('현대캐피탈 자동차 할부금융 확대', 1), self.article('금융권 해킹 사고 발생', 2), self.article('샘플건설001 대표 인사 발표', 3)]
+        self.assertFalse(select(unrelated, NOW, 24, roster=ROSTER, detailed=True, project=True))
+        regional = [self.article('부산 아파트 공사현장 준공 일정 발표', 4), self.article('대전 산업단지 개발 인허가 발표', 5)]
+        self.assertEqual(len(select(regional, NOW, 24, roster=ROSTER, detailed=True, project=True)), 2)

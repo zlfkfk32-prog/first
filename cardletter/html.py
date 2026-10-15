@@ -5,7 +5,8 @@ from pathlib import Path
 from .news import Card, Coverage
 
 GROUPS = ('부동산 PF·정책', '업권 공통·캐피탈', '기업금융·IB', '개인·리테일 금융', '투자', '리스크관리', 'IT·디지털', 'TOP100 시공사')
-DESCRIPTIONS = ('PF·담보·공급·당국 정책', '조달·회사채·캐피탈사 경영', '인수금융·기업대출·구조화·NPL', '가계·개인사업자·자동차금융·소비자 보호', '신기술금융·펀드·지분투자', '연체·충당금·건전성·안전', 'AI·정보보호·전자금융', '공식 시공능력평가 명단 대조')
+DESCRIPTIONS = ('사업장 PF·공사비·인허가·정책', '부동산 사업장 대주단·담보·조달', '사업장 인수·매각·공매·채권 정리', '지역별 분양·입주·미분양·현장 일정', '개발사업·리츠·물류센터·산업단지', '시공사 부도·부실·하자·사고·공사 중단', '공사현장 디지털·스마트건설·안전기술', '공식 TOP100 시공사의 현장·주요 이슈')
+
 GLOSSARY = {
     'PF': '개발사업에서 생길 수익을 주요 상환재원으로 삼는 금융입니다.',
     'NPL': '정상적인 원리금 회수가 어려운 부실채권을 뜻합니다.',
@@ -24,7 +25,7 @@ def groups(card: Card) -> tuple[str, ...]:
     primary = {'캐피탈업권': GROUPS[1], '개인·리테일 금융': GROUPS[3], 'TOP100 시공사': GROUPS[7], '기업금융·IB': GROUPS[2], '투자': GROUPS[4], '리스크관리': GROUPS[5], 'IT·디지털': GROUPS[6]}.get(card.category, GROUPS[0])
     result = [primary]
     text = card.article.title.lower()
-    for label, words in ((GROUPS[2], ('인수금융', '기업금융', '기업대출', '구조화', 'npl')), (GROUPS[4], ('지분투자', '신기술금융', '펀드')), (GROUPS[5], ('연체', '충당금', '건전성', '유동성', '부실', '신용', '안전')), (GROUPS[6], ('해킹', '정보유출', '정보 유출', '디지털', '보안', '인공지능'))):
+    for label, words in ((GROUPS[2], ('인수금융', '기업금융', '기업대출', '구조화', 'npl', 'pf', '공매', '사업장 매각')), (GROUPS[4], ('지분투자', '신기술금융', '펀드')), (GROUPS[5], ('연체', '충당금', '건전성', '유동성', '부실', '신용', '안전', '부도', '하자', '사고', '붕괴', '회생', '공사중단')), (GROUPS[6], ('해킹', '정보유출', '정보 유출', '디지털', '보안', '인공지능'))):
         if label not in result and any(word in text for word in words):
             result.append(label)
     return tuple(result)
@@ -37,10 +38,12 @@ def article_box(card: Card, as_of: datetime, demo: bool) -> str:
     label = '가상 예시' if demo else '공식기관 발표' if a.official else '언론 보도'
     stamp = a.published.astimezone(as_of.tzinfo).strftime('%m.%d · 날짜만 제공' if a.date_only else '%m.%d %H:%M KST')
     rank = ' · 시평 ' + ', '.join(map(str, card.contractor_ranks)) + '위' if card.contractor_ranks else ''
+    regions = [region for region in ('서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산', '세종', '강원', '충북', '충남', '충청', '전북', '전남', '전라', '경북', '경남', '경상', '제주') if region in a.title]
+    region_note = '제목에 표시된 지역: ' + (', '.join(regions) if regions else '미표시 · 원문 확인 필요')
     text = a.title + ' ' + card.summary
     terms = ''.join(f'<li><b>{escape(term)}</b> — {escape(definition)}</li>' for term, definition in GLOSSARY.items() if term.lower() in text.lower())
     glossary = f'<details><summary>용어 쉽게 보기</summary><ul>{terms}</ul></details>' if terms else ''
-    inner = f'<span class="badge">{label}</span><h3>{title}</h3><div class="meta">{escape(a.publisher)} · {stamp}{rank}</div><h4>무슨 내용인가요?</h4><p>{body}</p><h4>업무에서 확인할 점 <small>일반 검토 안내</small></h4><p>{escape(card.checkpoint)}</p><div class="meta">요약 방식: {escape(card.summary_kind)} · {"본문/설명문 추출 완료 · 사실의 독립 검증을 뜻하지 않음" if card.summary else "추가 원문 확인 필요"}</div>{glossary}'
+    inner = f'<span class="badge">{label}</span><h3>{title}</h3><div class="meta">{escape(a.publisher)} · {stamp}{rank}</div><div class="meta">{escape(region_note)}</div><h4>무슨 내용인가요?</h4><p>{body}</p><h4>업무에서 확인할 점 <small>일반 검토 안내</small></h4><p>{escape(card.checkpoint)}</p><div class="meta">요약 방식: {escape(card.summary_kind)} · {"본문/설명문 추출 완료 · 사실의 독립 검증을 뜻하지 않음" if card.summary else "추가 원문 확인 필요"}</div>{glossary}'
     if demo:
         content = f'<div>{inner}</div>'
     else:

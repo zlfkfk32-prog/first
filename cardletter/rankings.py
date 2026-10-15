@@ -36,7 +36,7 @@ class Roster:
         # Separate batches cover all 100 names instead of truncating one long search query.
         aliases = list(dict.fromkeys(alias for company in self.contractors for alias in (company.name, *company.aliases)))
         return ["(" + " OR ".join('"' + alias + '"' for alias in aliases[i:i + size]) + ") "
-                "(수주 OR PF OR 신용 OR 부실 OR 유동성 OR 실적 OR 안전 OR 분양 OR 경영 OR 인사) -배구 -농구"
+                "(수주 OR PF OR 부도 OR 부실 OR 하자 OR 사고 OR 회생 OR 공사중단 OR 착공 OR 준공 OR 분양 OR 공사비) -배구 -농구"
                 for i in range(0, len(aliases), size)]
 
 

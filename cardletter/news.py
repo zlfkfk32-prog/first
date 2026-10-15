@@ -25,18 +25,16 @@ class Feed:
 
 # MOLIT currently uses indexed search; FSC/FSS use public official board lists below.
 FEEDS = (
-    Feed("국토교통부", 'site:molit.go.kr (주택 OR 건설 OR 부동산)', "molit.go.kr"),
-    Feed("한국투자캐피탈", '"한국투자캐피탈"'),
-    Feed("부동산 PF·금융", '"부동산" (PF OR 프로젝트파이낸싱 OR 금융 OR 대출)'),
-    # Do not put sports exclusions in the search itself: indexed sidebars can hide legitimate finance stories.
-    # Business/company validation happens on each returned headline below.
-    Feed("기업금융·IB", '금융 (인수금융 OR 기업대출 OR 구조화금융 OR NPL)'),
-    Feed("투자·신기술금융", '캐피탈 (신기술금융 OR 지분투자 OR 펀드)'),
-    Feed("리스크관리", '금융 (연체율 OR 충당금 OR 건전성)'),
-    Feed("IT·디지털", '금융 (정보보호 OR 해킹 OR 전자금융 OR 인공지능)'),
-    Feed("캐피탈업권", '캐피탈 OR 현대커머셜'),
-    Feed("개인·리테일 금융", '개인대출 OR 가계대출 OR 자동차금융 OR 오토리스 OR 할부금융 OR 금융소비자'),
+    Feed("국토교통부", 'site:molit.go.kr (사업장 OR 건설 OR 주택 OR 인허가)', "molit.go.kr"),
+    Feed("사업장 PF", '(부동산 OR 사업장) (PF OR 브리지론 OR 본PF OR 만기)'),
+    Feed("시공사 중대 이슈", '(건설사 OR 시공사 OR 공사현장) (부도 OR 부실 OR 하자 OR 사고 OR 회생 OR 공사중단)'),
+    Feed("공사현장", '(공사현장 OR 건설현장 OR 공정률 OR 착공 OR 준공) (사업 OR 아파트 OR 건설)'),
+    Feed("수도권 사업장", '(서울 OR 경기 OR 인천) (재개발 OR 재건축 OR 정비사업 OR 분양 OR 공사비)'),
+    Feed("지방 사업장", '(부산 OR 대구 OR 광주 OR 대전 OR 울산 OR 세종 OR 강원 OR 충청 OR 전라 OR 경상 OR 제주) (개발사업 OR 미분양 OR 공사현장 OR 정비사업)'),
+    Feed("개발·물류·산단", '(물류센터 OR 데이터센터 OR 산업단지 OR 도시개발) (사업 OR 착공 OR 인허가 OR 금융)'),
+    Feed("사업장 조달·매각", '(부동산 OR 사업장) (캐피탈 OR 대주단 OR 매각 OR 공매 OR 리츠)'),
 )
+
 
 OFFICIAL_BOARDS = (
     ("금융위원회", "https://www.fsc.go.kr/no010101", "li", r"/no010101/\d+[^\"]*"),
@@ -243,7 +241,7 @@ def classify(article: Article, roster: Roster | None = None) -> tuple[str, str, 
     if sports_news(article.title):
         return None
     if roster and roster.matches(article.title) and any(w.lower() in title for w in (
-        "수주", "PF", "신용", "부실", "유동성", "실적", "안전", "사고", "분양", "경영", "인사", "대표", "착공", "정비사업",
+        "수주", "PF", "신용", "부실", "하자", "유동성", "실적", "안전", "사고", "분양", "경영", "인사", "대표", "착공", "정비사업",
     )):
         return "TOP100 시공사", "시공사 경영·신용·수주·안전 관련 주요 변화를 확인하세요.", 115
     if any(word in title for word in (
@@ -283,7 +281,7 @@ def normalized_title(title: str) -> str:
 
 
 def select(articles: list[Article], as_of: datetime, hours: int, limit: int = 6,
-           roster: Roster | None = None, detailed: bool = False) -> list[Card]:
+           roster: Roster | None = None, detailed: bool = False, project: bool = False) -> list[Card]:
     candidates = []
     cutoff = as_of - timedelta(hours=hours)
     for article in articles:
@@ -294,7 +292,11 @@ def select(articles: list[Article], as_of: datetime, hours: int, limit: int = 6,
             in_window = cutoff <= article.published <= as_of
         if not in_window:
             continue
-        match = classify(article, roster)
+        if project:
+            from .project_focus import classify_project
+            match = None if sports_news(article.title) else classify_project(article, roster)
+        else:
+            match = classify(article, roster)
         if match is None:
             continue
         category, checkpoint, weight = match
