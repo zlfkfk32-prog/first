@@ -7,3 +7,5 @@ googlenewsdecoder==0.2.1
 # Decoder 0.2.1 imports the Modest parser removed by selectolax 1.0.
 selectolax==0.4.12
 openpyxl==3.1.5
+# Windows does not provide the IANA time zone database used by zoneinfo.
+tzdata==2025.2
