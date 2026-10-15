@@ -329,13 +329,13 @@ class ProjectFocusTests(unittest.TestCase):
 
     def test_prevention_is_not_reported_as_major_incident(self):
         from cardletter.project_focus import major_issue
-        for title in ('건설현장 안전사고 예방 교육', '샘플건설001 무사고 캠페인', '샘플건설001 부도설 부인'):
+        for title in ('건설현장 안전사고 예방 교육', '샘플건설001 무사고 캠페인', '샘플건설001 부도설 부인', '건설현장 사고 AI가 먼저 막는다 박람회', '한화 건설부문 현장 사고 막는다', '건설사 하자 분쟁 우려'):
             self.assertFalse(major_issue(title, ROSTER))
         for title in ('시공사 법정관리 신청', '부산 공사현장 붕괴 사고 발생', '아파트 부실시공 하자 판결'):
             self.assertTrue(major_issue(title, ROSTER))
 
     def test_project_relevance_and_regional_sites(self):
-        unrelated = [self.article('현대캐피탈 자동차 할부금융 확대', 1), self.article('금융권 해킹 사고 발생', 2), self.article('샘플건설001 대표 인사 발표', 3)]
+        unrelated = [self.article('현대캐피탈 자동차 할부금융 확대', 1), self.article('금융권 해킹 사고 발생', 2), self.article('샘플건설001 대표 인사 발표', 3), self.article('샘플건설001 주가 하락 코스피 붕괴', 6), self.article('샘플건설001 지분도 사고 인재 영입', 7)]
         self.assertFalse(select(unrelated, NOW, 24, roster=ROSTER, detailed=True, project=True))
         regional = [self.article('부산 아파트 공사현장 준공 일정 발표', 4), self.article('대전 산업단지 개발 인허가 발표', 5)]
         self.assertEqual(len(select(regional, NOW, 24, roster=ROSTER, detailed=True, project=True)), 2)

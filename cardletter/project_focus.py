@@ -3,7 +3,7 @@ import re
 
 PROJECT_WORDS = ('부동산', '사업장', '공사현장', '공사 현장', '건설', '시공', '아파트', '주택', '재개발', '재건축', '정비사업', '물류센터', '데이터센터', '산업단지', '도시개발', '분양', '미분양', '착공', '준공', '공사비', '공정률', '택지')
 ISSUES = ('부도', '파산', '법정관리', '회생절차', '회생신청', '회생 신청', '워크아웃', '부실', '하자', '붕괴', '사망', '중대재해', '화재', '사고', '공사중단', '공사 중단', '지급불능', '채무불이행')
-NEGATIONS = ('예방', '방지', '대비', '훈련', '교육', '캠페인', '무사고', '제로', '사고 없는', '부도설 부인', '부도설 일축')
+NEGATIONS = ('예방', '방지', '대비', '훈련', '교육', '캠페인', '무사고', '제로', '사고 없는', '부도설 부인', '부도설 일축', '막는다', '막는', '우려', '가능성', '박람회')
 
 
 def relevant(title: str, roster=None) -> bool:
@@ -13,7 +13,7 @@ def relevant(title: str, roster=None) -> bool:
     names = [name for company in matches for name in (company.name, *company.aliases)]
     for name in sorted(names, key=len, reverse=True):
         context = context.replace(name, '')
-    return bool(any(w in context for w in PROJECT_WORDS) or re.search(r'(?<![a-z])pf(?![a-z])', context.lower()) or (matches and any(w in context for w in ISSUES + ('수주', '낙찰', '공사', '신용등급'))))
+    return bool(any(w in context for w in PROJECT_WORDS) or re.search(r'(?<![a-z])pf(?![a-z])', context.lower()) or (matches and any(w in context for w in ('부도', '파산', '법정관리', '회생', '워크아웃', '부실', '하자', '채무불이행', '지급불능', '수주', '낙찰', '공사', '신용등급'))))
 
 
 def major_issue(title: str, roster=None) -> bool:
